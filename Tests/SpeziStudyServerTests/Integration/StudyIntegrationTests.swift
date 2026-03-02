@@ -7,13 +7,14 @@
 //
 
 import Foundation
+import SpeziLocalization
 @testable import SpeziStudyServer
 import Testing
 import VaporTesting
 
 
 @Suite(.serialized)
-struct StudyIntegrationTests {
+struct StudyIntegrationTests { // swiftlint:disable:this type_body_length
     @Test
     func createStudy() async throws {
         try await TestApp.withApp { app, token in
@@ -29,7 +30,7 @@ struct StudyIntegrationTests {
                 let study = try response.content.decode(Components.Schemas.StudyResponse.self)
                 #expect(study.id.isEmpty == false)
                 #expect(study.details[.enUS]?.title == "New Study")
-                #expect(study.locales == ["en-US"])
+                #expect(study.locales == [.enUS])
                 #expect(study.icon == "heart")
                 #expect(study.consent.isEmpty)
             }
@@ -66,7 +67,7 @@ struct StudyIntegrationTests {
                 let responseStudy = try response.content.decode(Components.Schemas.StudyResponse.self)
                 #expect(responseStudy.id == studyId.uuidString)
                 #expect(responseStudy.details[.enUS]?.title == "Test Study")
-                #expect(responseStudy.locales == ["en-US"])
+                #expect(responseStudy.locales == [.enUS])
                 #expect(responseStudy.icon == "heart")
                 #expect(responseStudy.consent.isEmpty)
             }
@@ -110,7 +111,7 @@ struct StudyIntegrationTests {
 
                 let responseStudy = try response.content.decode(Components.Schemas.StudyResponse.self)
                 #expect(responseStudy.details[.enUS]?.title == "Updated Title")
-                #expect(responseStudy.locales == ["en-US"])
+                #expect(responseStudy.locales == [.enUS])
                 #expect(responseStudy.icon == "heart")
                 #expect(responseStudy.consent.isEmpty)
             }
@@ -144,7 +145,7 @@ struct StudyIntegrationTests {
                 #expect(responseStudy.details[.enUS]?.shortTitle == "TS")
                 #expect(responseStudy.details[.enUS]?.explanationText == "A test study explanation")
                 #expect(responseStudy.details[.enUS]?.shortExplanationText.isEmpty == true)
-                #expect(responseStudy.locales == ["en-US"])
+                #expect(responseStudy.locales == [.enUS])
                 #expect(responseStudy.icon == "heart")
                 #expect(responseStudy.consent.isEmpty)
             }
@@ -174,7 +175,7 @@ struct StudyIntegrationTests {
                 let responseStudy = try response.content.decode(Components.Schemas.StudyResponse.self)
                 #expect(responseStudy.consent[.enUS] == "# Informed Consent\n\nBy participating in this study, you agree to...")
                 #expect(responseStudy.details[.enUS]?.title == "Consent Study")
-                #expect(responseStudy.locales == ["en-US"])
+                #expect(responseStudy.locales == [.enUS])
                 #expect(responseStudy.icon == "heart")
             }
 
@@ -253,6 +254,52 @@ struct StudyIntegrationTests {
 
                 let studies = try response.content.decode([Components.Schemas.StudyListItem].self)
                 #expect(studies.count == 1)
+            }
+        }
+    }
+
+    @Test
+    func patchStudyDeduplicatesLocales() async throws {
+        try await TestApp.withApp { app, token in
+            let group = try await GroupFixtures.createGroup(on: app.db)
+            let groupId = try group.requireId()
+            let study = try await StudyFixtures.createStudy(on: app.db, groupId: groupId)
+            let studyId = try study.requireId()
+
+            let patchBody: [String: Any] = [
+                "locales": ["en-US", "de-DE", "en-US"]
+            ]
+
+            try await app.test(.PATCH, "\(apiBasePath)/studies/\(studyId)", beforeRequest: { req in
+                req.bearerAuth(token)
+                try req.encodeJSONBody(patchBody)
+            }) { response in
+                #expect(response.status == .ok)
+
+                let responseStudy = try response.content.decode(Components.Schemas.StudyResponse.self)
+                let deDE = LocalizationKey(language: .init(identifier: "de"), region: .germany)
+                #expect(responseStudy.locales == [deDE, .enUS])
+            }
+        }
+    }
+
+    @Test
+    func patchStudyWithInvalidLocale() async throws {
+        try await TestApp.withApp { app, token in
+            let group = try await GroupFixtures.createGroup(on: app.db)
+            let groupId = try group.requireId()
+            let study = try await StudyFixtures.createStudy(on: app.db, groupId: groupId)
+            let studyId = try study.requireId()
+
+            let patchBody: [String: Any] = [
+                "locales": ["banana"]
+            ]
+
+            try await app.test(.PATCH, "\(apiBasePath)/studies/\(studyId)", beforeRequest: { req in
+                req.bearerAuth(token)
+                try req.encodeJSONBody(patchBody)
+            }) { response in
+                #expect(response.status == .badRequest)
             }
         }
     }

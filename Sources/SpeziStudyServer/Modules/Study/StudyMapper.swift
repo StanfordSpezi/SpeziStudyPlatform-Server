@@ -15,7 +15,7 @@ extension Study {
     convenience init(_ schema: Components.Schemas.StudyCreateInput, groupId: UUID) {
         self.init(
             groupId: groupId,
-            locales: ["en-US"],
+            locales: [.enUS],
             icon: schema.icon,
             details: .init([.enUS: StudyDetailContent(title: schema.title)]),
             id: UUID()
@@ -26,7 +26,7 @@ extension Study {
 extension StudyPatch {
     init(_ schema: Components.Schemas.StudyPatchInput) {
         self.init(
-            locales: schema.locales,
+            locales: schema.locales.map(Set.init),
             icon: schema.icon,
             details: schema.details,
             participationCriterion: schema.participationCriterion.map { .init($0) },
@@ -49,7 +49,7 @@ extension Components.Schemas.StudyResponse {
     init(_ model: Study) throws {
         self.init(
             id: try model.requireId().uuidString,
-            locales: model.locales,
+            locales: model.locales.sorted(using: KeyPathComparator(\.description)),
             icon: model.icon,
             details: model.details,
             participationCriterion: try .init(model.participationCriterion),

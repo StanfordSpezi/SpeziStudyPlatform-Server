@@ -22,7 +22,7 @@ enum StudyFixtures {
     ) async throws -> Study {
         let study = Study(
             groupId: groupId,
-            locales: ["en-US"],
+            locales: [.enUS],
             icon: "heart",
             details: .init([.enUS: StudyDetailContent(title: title)]),
             id: id

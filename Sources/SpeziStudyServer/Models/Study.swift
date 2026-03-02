@@ -37,7 +37,7 @@ struct StudyDetailContent: Codable, Sendable, Hashable {
 
 
 struct StudyPatch: Sendable {
-    var locales: [String]? // swiftlint:disable:this discouraged_optional_collection
+    var locales: Set<LocalizationKey>? // swiftlint:disable:this discouraged_optional_collection
     var icon: String?
     var details: LocalizationsDictionary<StudyDetailContent>?
     var participationCriterion: StudyDefinition.ParticipationCriterion?
@@ -52,7 +52,7 @@ final class Study: Model, @unchecked Sendable {
 
     @Parent(key: "group_id") var group: Group
 
-    @Field(key: "locales") var locales: [String]
+    @Field(key: "locales") var locales: Set<LocalizationKey>
 
     @Field(key: "icon") var icon: String
 
@@ -68,7 +68,7 @@ final class Study: Model, @unchecked Sendable {
 
     init(
         groupId: UUID,
-        locales: [String],
+        locales: Set<LocalizationKey>,
         icon: String,
         details: LocalizationsDictionary<StudyDetailContent> = .init(),
         participationCriterion: StudyDefinition.ParticipationCriterion = .all([]),

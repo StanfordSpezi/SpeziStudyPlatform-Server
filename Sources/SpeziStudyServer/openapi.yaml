@@ -865,6 +865,11 @@ components:
           type: string
           description: A human-readable explanation specific to this occurrence
 
+    LocalizationKey:
+      type: string
+      description: "A locale identifier in language-region format (e.g. en-US, de-DE)"
+      example: "en-US"
+
     LocalizedString:
       type: object
       description: Localized string keyed by locale (e.g., "en-US" -> "value")
@@ -1111,9 +1116,10 @@ components:
       properties:
         locales:
           type: array
+          uniqueItems: true
           description: Supported locales for the study
           items:
-            type: string
+            $ref: '#/components/schemas/LocalizationKey'
           minItems: 1
           example: ["en-US", "de-DE"]
         icon:
@@ -1143,9 +1149,10 @@ components:
           format: uuid
         locales:
           type: array
+          uniqueItems: true
           description: Supported locales for the study
           items:
-            type: string
+            $ref: '#/components/schemas/LocalizationKey'
           example: ["en-US", "de-DE"]
         icon:
           type: string
