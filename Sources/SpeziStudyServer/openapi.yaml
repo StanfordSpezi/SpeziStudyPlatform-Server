@@ -893,6 +893,7 @@ components:
         day:
           type: integer
           minimum: 0
+      minProperties: 1
       additionalProperties: false
 
     SampleTypesCollection:
@@ -950,6 +951,7 @@ components:
         $ref: '#/components/schemas/StudyDetailContent'
       example:
         en-US:
+          title: "My Heart Counts"
           shortTitle: "MHC"
           explanationText: "This study aims to..."
           shortExplanationText: "A heart health study"
