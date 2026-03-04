@@ -11,6 +11,7 @@ import SpeziLocalization
 @testable import SpeziStudyServer
 import Testing
 import VaporTesting
+import ZIPFoundation
 
 
 @Suite(.serialized)
@@ -300,6 +301,56 @@ struct StudyIntegrationTests { // swiftlint:disable:this type_body_length
                 try req.encodeJSONBody(patchBody)
             }) { response in
                 #expect(response.status == .badRequest)
+            }
+        }
+    }
+
+    @Test
+    func downloadStudyBundle() async throws {
+        try await TestApp.withApp { app, token in
+            let group = try await GroupFixtures.createGroup(on: app.db)
+            let groupId = try group.requireId()
+            let study = try await StudyFixtures.createStudy(on: app.db, groupId: groupId, title: "Bundle Study")
+            let studyId = try study.requireId()
+
+            // Add consent text
+            study.consent = .init([.enUS: "# Consent\n\nYou agree to participate."])
+            try await study.save(on: app.db)
+
+            // Add components
+            try await ComponentFixtures.createInformationalComponent(on: app.db, studyId: studyId)
+            try await ComponentFixtures.createQuestionnaireComponent(on: app.db, studyId: studyId)
+
+            try await app.test(.GET, "\(apiBasePath)/studies/\(studyId)/bundle", beforeRequest: { req in
+                req.bearerAuth(token)
+            }) { response in
+                #expect(response.status == .ok)
+
+                let contentDisposition = response.headers.first(name: .contentDisposition)
+                #expect(contentDisposition?.contains("attachment") == true)
+                #expect(contentDisposition?.contains("-spezistudybundle.zip") == true)
+
+                let zipData = response.body
+                #expect(zipData.readableBytes > 0)
+
+                // Verify ZIP contains definition.json
+                let data = Data(buffer: zipData)
+                let archive = try Archive(data: data, accessMode: .read)
+                let paths = archive.map(\.path)
+                #expect(paths.contains(where: { $0.contains("definition.json") }))
+            }
+        }
+    }
+
+    @Test
+    func downloadStudyBundleNotFound() async throws {
+        try await TestApp.withApp { app, token in
+            let nonExistentId = UUID()
+
+            try await app.test(.GET, "\(apiBasePath)/studies/\(nonExistentId)/bundle", beforeRequest: { req in
+                req.bearerAuth(token)
+            }) { response in
+                #expect(response.status == .notFound)
             }
         }
     }
