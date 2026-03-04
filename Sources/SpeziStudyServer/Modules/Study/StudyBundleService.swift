@@ -14,6 +14,7 @@ import ZIPFoundation
 
 
 final class StudyBundleService: Module, @unchecked Sendable {
+    @Dependency(StudyService.self) var studyService
     @Dependency(StudyRepository.self) var studyRepository
     @Dependency(InformationalComponentRepository.self) var informationalRepository
     @Dependency(QuestionnaireComponentRepository.self) var questionnaireRepository
@@ -22,6 +23,7 @@ final class StudyBundleService: Module, @unchecked Sendable {
     init() {}
 
     func buildBundle(studyId: UUID) async throws -> Data {
+        try await studyService.checkHasAccess(to: studyId, role: .researcher)
         let study = try await studyRepository.findWithComponentsAndSchedules(id: studyId)
 
         let (metadata, consentFiles) = try buildMetadata(from: study)
