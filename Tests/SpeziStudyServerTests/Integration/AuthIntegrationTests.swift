@@ -123,11 +123,13 @@ struct AuthIntegrationTests {
             researcher(.POST, "\(base)/studies/\(studyId)/invitation-codes", body: jsonData(["count": 1] as [String: Any]), successStatus: .created),
             researcher(.DELETE, "\(base)/studies/\(studyId)/invitation-codes/\(dummyId)", successStatus: .notFound),
 
-            // Studies — destructive + not yet implemented
+            // Published Studies & Enrollments
+            researcher(.POST, "\(base)/studies/\(studyId)/publish", minRole: .admin, successStatus: .created),
+            researcher(.GET, "\(base)/studies/\(studyId)/published", successStatus: .ok),
+            researcher(.GET, "\(base)/studies/\(studyId)/enrollments", successStatus: .ok),
+
+            // Studies — destructive
             researcher(.DELETE, "\(base)/studies/\(studyId)", minRole: .admin, successStatus: .noContent),
-            researcher(.POST, "\(base)/studies/\(studyId)/publish", minRole: .admin, successStatus: .notImplemented, requiresGroupAccess: false),
-            researcher(.GET, "\(base)/studies/\(studyId)/published", successStatus: .notImplemented, requiresGroupAccess: false),
-            researcher(.GET, "\(base)/studies/\(studyId)/enrollments", successStatus: .notImplemented, requiresGroupAccess: false),
 
             // Components
             researcher(.GET, "\(base)/studies/\(studyId)/components", successStatus: .ok),

@@ -51,33 +51,20 @@ extension Controller {
     var invitationCodeService: InvitationCodeService {
         spezi[InvitationCodeService.self]
     }
+
+    var publishedStudyService: PublishedStudyService {
+        spezi[PublishedStudyService.self]
+    }
+
+    var enrollmentService: EnrollmentService {
+        spezi[EnrollmentService.self]
+    }
 }
 
 
 // MARK: - Not Yet Implemented
 
 extension Controller {
-    func postStudiesStudyIdPublish(
-        _ input: Operations.PostStudiesStudyIdPublish.Input
-    ) async throws -> Operations.PostStudiesStudyIdPublish.Output {
-        try AuthContext.checkIsResearcher()
-        throw ServerError.endpointNotImplemented
-    }
-
-    func getStudiesStudyIdPublished(
-        _ input: Operations.GetStudiesStudyIdPublished.Input
-    ) async throws -> Operations.GetStudiesStudyIdPublished.Output {
-        try AuthContext.checkIsResearcher()
-        throw ServerError.endpointNotImplemented
-    }
-
-    func getStudiesStudyIdEnrollments(
-        _ input: Operations.GetStudiesStudyIdEnrollments.Input
-    ) async throws -> Operations.GetStudiesStudyIdEnrollments.Output {
-        try AuthContext.checkIsResearcher()
-        throw ServerError.endpointNotImplemented
-    }
-
     // MARK: - Participant (Not Yet Implemented)
 
     func postParticipantEnrollments(

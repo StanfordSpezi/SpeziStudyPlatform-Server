@@ -65,8 +65,12 @@ public func configureServices(for app: Application) async {
         ComponentScheduleRepository(database: app.db)
         InvitationCodeService()
         ProfileService()
+        PublishedStudyService()
+        EnrollmentService()
         InvitationCodeRepository(database: app.db)
         ProfileRepository(database: app.db)
+        PublishedStudyRepository(database: app.db)
+        EnrollmentRepository(database: app.db)
     }
 }
 
