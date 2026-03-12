@@ -67,7 +67,7 @@ extension Components.Schemas.PublishedStudyResponse {
         self.init(
             id: try model.requireId().uuidString,
             studyId: model.$study.id.uuidString,
-            revision: model.revision,
+            revision: Int(model.revision),
             visibility: model.visibility,
             bundleURL: model.bundleURL.absoluteString,
             publishedAt: model.createdAt!  // swiftlint:disable:this force_unwrapping

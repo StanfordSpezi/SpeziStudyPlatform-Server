@@ -185,6 +185,9 @@ paths:
       tags:
         - Download
       summary: Download the full study bundle as a ZIP file
+      description: >
+        Temporary endpoint for previewing bundles during development.
+        Will be removed once bundles are served from file storage.
       parameters:
         - $ref: '#/components/parameters/StudyId'
       responses:

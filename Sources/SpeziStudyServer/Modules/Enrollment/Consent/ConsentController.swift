@@ -28,21 +28,23 @@ extension Controller {
         }
 
         var userResponses: UserResponses?
-        let consentURL = URL(string: "https://example.com/TODO")! // swiftlint:disable:this force_unwrapping
+        var consentURL: URL?
 
         for try await part in multipartBody {
             switch part {
             case .consentData(let payload):
                 userResponses = UserResponses(payload.payload.body)
             case .consentPDF(let payload):
-                _ = try await Data(collecting: payload.payload.body, upTo: 10_000_000) // TODO: Store consent PDF and set consentURL
+                // TODO: Store consent PDF and set consentURL
+                _ = try await Data(collecting: payload.payload.body, upTo: 10_000_000)
+                consentURL = URL(string: "https://example.com/TODO")
             case .undocumented:
                 break
             }
         }
 
-        guard let userResponses else {
-            throw ServerError.badRequest("Missing consentData part")
+        guard let userResponses, let consentURL else {
+            throw ServerError.badRequest("Request must include both consentData and consentPDF parts")
         }
 
         let record = try await consentService.createConsent(

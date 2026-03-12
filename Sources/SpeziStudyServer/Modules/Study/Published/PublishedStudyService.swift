@@ -20,12 +20,17 @@ final class PublishedStudyService: Module, @unchecked Sendable {
         try await studyService.checkHasAccess(to: studyId, role: .admin)
 
         let study = try await studyService.getStudy(id: studyId)
-        let nextRevision = (try await repository.maxRevision(forStudyId: studyId) ?? 0) + 1
+        
+        let maxRevision = try await repository.maxRevision(forStudyId: studyId)
+        let nextRevision = (maxRevision ?? 0) + 1
 
         let (metadata, _) = try await studyBundleService.buildMetadata(from: study)
-        
-        // TODO: Upload bundle and store real URL
-        let bundleURL = URL(string: "https://example.com/TODO")! // swiftlint:disable:this force_unwrapping
+
+        // TODO: Upload bundle to file storage and use the real URL
+        _ = try await studyBundleService.buildBundle(studyId: studyId, revision: nextRevision)
+        guard let bundleURL = URL(string: "https://example.com/TODO") else {
+            throw ServerError.internalServerError("Failed to construct bundle URL")
+        }
         let published = PublishedStudy(
             studyId: studyId,
             revision: nextRevision,

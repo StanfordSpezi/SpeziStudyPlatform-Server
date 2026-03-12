@@ -17,7 +17,7 @@ struct CreateEnrollments: AsyncMigration {
             .field("participant_id", .uuid, .required, .references("participants", "id", onDelete: .cascade))
             .field("study_id", .uuid, .required, .references("studies", "id", onDelete: .cascade))
             .field("invitation_code_id", .uuid, .references("invitation_codes", "id", onDelete: .setNull))
-            .field("current_revision", .int, .required)
+            .field("current_revision", .uint, .required)
             .field("withdrawn_at", .datetime)
             .field("participation_data", .json, .required)
             .timestamps()

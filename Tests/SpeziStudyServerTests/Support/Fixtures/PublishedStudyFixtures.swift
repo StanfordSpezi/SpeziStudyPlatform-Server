@@ -18,7 +18,7 @@ enum PublishedStudyFixtures {
     static func createPublishedStudy(
         on database: any Database,
         studyId: UUID,
-        revision: Int = 1,
+        revision: UInt = 1,
         visibility: StudyVisibility = .public,
         enrollmentCondition: EnrollmentConditions = .none,
         title: String = "Test Study",

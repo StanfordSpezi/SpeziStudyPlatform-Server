@@ -14,8 +14,8 @@ extension Components.Schemas.ConsentRecordResponse {
         self.init(
             id: try model.requireId().uuidString,
             enrollmentId: model.$enrollment.id.uuidString,
-            revision: model.revision,
-            consentData: .init(revision: model.revision, userResponses: model.userResponses),
+            revision: Int(model.revision),
+            consentData: .init(revision: Int(model.revision), userResponses: model.userResponses),
             pdfURL: model.consentURL.absoluteString
         )
     }

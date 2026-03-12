@@ -17,8 +17,7 @@ import ZIPFoundation
 final class StudyBundleService: Module, @unchecked Sendable {
     @Dependency(StudyService.self) var studyService
     @Dependency(StudyRepository.self) var studyRepository
-
-    func buildBundle(studyId: UUID) async throws -> Data {
+    func buildBundle(studyId: UUID, revision: UInt) async throws -> Data {
         try await studyService.checkHasAccess(to: studyId, role: .researcher)
         guard let study = try await studyRepository.findWithComponentsAndSchedules(id: studyId) else {
             throw ServerError.notFound(resource: "Study", identifier: studyId.uuidString)
@@ -29,7 +28,7 @@ final class StudyBundleService: Module, @unchecked Sendable {
         let schedules = study.components.flatMap { $0.schedules.map(\.scheduleData) }
 
         let definition = StudyDefinition(
-            studyRevision: 1,
+            studyRevision: revision,
             metadata: metadata,
             components: components,
             componentSchedules: schedules

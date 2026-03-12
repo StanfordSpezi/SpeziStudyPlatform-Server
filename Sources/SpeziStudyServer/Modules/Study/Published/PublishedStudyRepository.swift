@@ -25,7 +25,7 @@ final class PublishedStudyRepository: Module, Sendable {
             .all()
     }
 
-    func maxRevision(forStudyId studyId: UUID) async throws -> Int? {
+    func maxRevision(forStudyId studyId: UUID) async throws -> UInt? {
         try await PublishedStudy.query(on: database)
             .filter(\.$study.$id == studyId)
             .max(\.$revision)

@@ -28,7 +28,7 @@ final class PublishedStudy: Model, @unchecked Sendable {
 
     @Parent(key: "study_id") var study: Study
 
-    @Field(key: "revision") var revision: Int
+    @Field(key: "revision") var revision: UInt
 
     @Field(key: "visibility") var visibility: StudyVisibility
 
@@ -46,7 +46,7 @@ final class PublishedStudy: Model, @unchecked Sendable {
 
     init(
         studyId: UUID,
-        revision: Int,
+        revision: UInt,
         visibility: StudyVisibility,
         enrollmentCondition: EnrollmentConditions,
         bundleURL: URL,

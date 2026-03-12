@@ -14,7 +14,7 @@ struct CreatePublishedStudies: AsyncMigration {
         try await database.schema("published_studies")
             .id()
             .field("study_id", .uuid, .required, .references("studies", "id", onDelete: .cascade))
-            .field("revision", .int, .required)
+            .field("revision", .uint, .required)
             .field("visibility", .string, .required)
             .field("enrollment_condition", .string, .required)
             .field("bundle_url", .string, .required)

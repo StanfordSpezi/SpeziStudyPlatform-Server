@@ -14,7 +14,7 @@ struct CreateEnrollmentConsents: AsyncMigration {
         try await database.schema("enrollment_consents")
             .id()
             .field("enrollment_id", .uuid, .required, .references("enrollments", "id", onDelete: .cascade))
-            .field("revision", .int, .required)
+            .field("revision", .uint, .required)
             .field("user_responses", .json, .required)
             .field("consent_url", .string, .required)
             .timestamps()

@@ -27,7 +27,7 @@ final class Enrollment: Model, @unchecked Sendable {
 
     @OptionalParent(key: "invitation_code_id") var invitationCode: InvitationCode?
 
-    @Field(key: "current_revision") var currentRevision: Int
+    @Field(key: "current_revision") var currentRevision: UInt
 
     @Field(key: "participation_data") var participationData: ParticipationData
     
@@ -44,7 +44,7 @@ final class Enrollment: Model, @unchecked Sendable {
     init(
         participantId: UUID,
         studyId: UUID,
-        currentRevision: Int,
+        currentRevision: UInt,
         invitationCodeId: UUID? = nil,
         participationData: ParticipationData = ParticipationData(),
         id: UUID? = nil

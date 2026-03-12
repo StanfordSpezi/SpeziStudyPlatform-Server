@@ -55,7 +55,7 @@ final class EnrollmentConsent: Model, @unchecked Sendable {
 
     @Parent(key: "enrollment_id") var enrollment: Enrollment
 
-    @Field(key: "revision") var revision: Int
+    @Field(key: "revision") var revision: UInt
 
     @Field(key: "user_responses") var userResponses: UserResponses
     
@@ -69,7 +69,7 @@ final class EnrollmentConsent: Model, @unchecked Sendable {
 
     init(
         enrollmentId: UUID,
-        revision: Int,
+        revision: UInt,
         userResponses: UserResponses,
         consentURL: URL,
         id: UUID? = nil
