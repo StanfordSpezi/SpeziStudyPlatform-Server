@@ -25,4 +25,11 @@ extension Controller {
         let published = try await publishedStudyService.listPublished(studyId: studyId)
         return .ok(.init(body: .json(try published.map { try .init($0) })))
     }
+
+    func getParticipantStudies(
+        _ input: Operations.GetParticipantStudies.Input
+    ) async throws -> Operations.GetParticipantStudies.Output {
+        let studies = try await publishedStudyService.browseStudies(code: input.query.code)
+        return .ok(.init(body: .json(try studies.map { try .init($0) })))
+    }
 }

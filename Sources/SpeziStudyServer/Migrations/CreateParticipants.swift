@@ -14,7 +14,6 @@ struct CreateParticipants: AsyncMigration {
         try await database.schema("participants")
             .id()
             .field("identity_provider_id", .string, .required)
-            .unique(on: "identity_provider_id")
             .field("first_name", .string, .required)
             .field("last_name", .string, .required)
             .field("email", .string, .required)
@@ -24,6 +23,7 @@ struct CreateParticipants: AsyncMigration {
             .field("language", .string, .required)
             .field("phone_number", .string, .required)
             .timestamps()
+            .unique(on: "identity_provider_id")
             .create()
     }
 

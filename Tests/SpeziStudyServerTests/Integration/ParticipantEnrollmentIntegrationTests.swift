@@ -110,6 +110,53 @@ struct ParticipantEnrollmentIntegrationTests { // swiftlint:disable:this type_bo
         }
     }
 
+    @Test
+    func enrollWithExpiredCodeReturnsBadRequest() async throws {
+        try await TestApp.withApp(token: .participant(subject: Self.participantSubject)) { app, token in
+            let (studyId, _) = try await setUpPublishedStudy(on: app, enrollmentCondition: .requiresInvitationCode)
+            try await ParticipantFixtures.createParticipant(on: app.db, identityProviderId: Self.participantSubject)
+
+            let code = InvitationCode(studyId: studyId, code: "EXPIRED-CODE", expiresAt: Date().addingTimeInterval(-3600))
+            try await code.save(on: app.db)
+
+            try await app.test(.POST, "\(apiBasePath)/participant/enrollments", beforeRequest: { req in
+                req.bearerAuth(token)
+                try req.encodeJSONBody(["studyId": studyId.uuidString, "invitationCode": "EXPIRED-CODE"])
+            }) { response in
+                #expect(response.status == .badRequest)
+            }
+        }
+    }
+
+    @Test
+    func enrollWithRedeemedCodeReturnsBadRequest() async throws {
+        try await TestApp.withApp(token: .participant(subject: Self.participantSubject)) { app, token in
+            let (studyId, _) = try await setUpPublishedStudy(on: app, enrollmentCondition: .requiresInvitationCode)
+
+            let otherParticipant = try await ParticipantFixtures.createParticipant(on: app.db, identityProviderId: "other-participant")
+            let code = InvitationCode(studyId: studyId, code: "USED-CODE")
+            try await code.save(on: app.db)
+
+            // Simulate another participant having redeemed this code
+            let enrollment = Enrollment(
+                participantId: try otherParticipant.requireId(),
+                studyId: studyId,
+                currentRevision: 1,
+                invitationCodeId: try code.requireId()
+            )
+            try await enrollment.save(on: app.db)
+
+            try await ParticipantFixtures.createParticipant(on: app.db, identityProviderId: Self.participantSubject)
+
+            try await app.test(.POST, "\(apiBasePath)/participant/enrollments", beforeRequest: { req in
+                req.bearerAuth(token)
+                try req.encodeJSONBody(["studyId": studyId.uuidString, "invitationCode": "USED-CODE"])
+            }) { response in
+                #expect(response.status == .badRequest)
+            }
+        }
+    }
+
     // MARK: - List Enrollments
 
     @Test
@@ -321,6 +368,37 @@ struct ParticipantEnrollmentIntegrationTests { // swiftlint:disable:this type_bo
                 #expect(consent.consentData.revision == 1)
                 #expect(consent.consentData.userResponses.toggles?.additionalProperties["agree_data_use"] == true)
                 #expect(!consent.pdfURL.isEmpty)
+            }
+        }
+    }
+
+    @Test
+    func duplicateConsentReturnsConflict() async throws {
+        try await TestApp.withApp(token: .participant(subject: Self.participantSubject)) { app, token in
+            let (studyId, _) = try await setUpPublishedStudy(on: app)
+            try await ParticipantFixtures.createParticipant(on: app.db, identityProviderId: Self.participantSubject)
+
+            var enrollmentId: String = ""
+            try await app.test(.POST, "\(apiBasePath)/participant/enrollments", beforeRequest: { req in
+                req.bearerAuth(token)
+                try req.encodeJSONBody(["studyId": studyId.uuidString])
+            }) { response in
+                let enrollment = try response.content.decode(Components.Schemas.EnrollmentResponse.self)
+                enrollmentId = enrollment.id
+            }
+
+            try await app.test(.POST, "\(apiBasePath)/participant/enrollments/\(enrollmentId)/consents", beforeRequest: { req in
+                req.bearerAuth(token)
+                try req.encodeMultipartConsentBody(consentData: consentDataJSON())
+            }) { response in
+                #expect(response.status == .created)
+            }
+
+            try await app.test(.POST, "\(apiBasePath)/participant/enrollments/\(enrollmentId)/consents", beforeRequest: { req in
+                req.bearerAuth(token)
+                try req.encodeMultipartConsentBody(consentData: consentDataJSON())
+            }) { response in
+                #expect(response.status == .conflict)
             }
         }
     }

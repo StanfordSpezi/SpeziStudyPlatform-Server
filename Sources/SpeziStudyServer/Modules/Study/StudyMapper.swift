@@ -62,29 +62,6 @@ extension Components.Schemas.StudyResponse {
     }
 }
 
-extension Components.Schemas.PublishedStudyResponse {
-    init(_ model: PublishedStudy) throws {
-        self.init(
-            id: try model.requireId().uuidString,
-            studyId: model.$study.id.uuidString,
-            revision: Int(model.revision),
-            visibility: model.visibility,
-            bundleURL: model.bundleURL.absoluteString,
-            publishedAt: model.createdAt!  // swiftlint:disable:this force_unwrapping
-        )
-    }
-}
-
-extension Components.Schemas.PublishedStudyListItem {
-    init(_ model: PublishedStudy) throws {
-        self.init(
-            id: model.$study.id.uuidString,
-            metadata: model.metadata
-        )
-    }
-}
-
-
 // MARK: - ParticipationCriterion Mapping
 
 extension Components.Schemas.ParticipationCriterion {
@@ -126,5 +103,3 @@ extension StudyDefinition.ParticipationCriterion {
         }
     }
 }
-
-

@@ -24,7 +24,7 @@ extension Components.Schemas.ComponentSchedule {
         }
         self.init(
             id: try model.requireId().uuidString,
-            scheduleDefinition: .init(model.scheduleData.scheduleDefinition),
+            scheduleDefinition: try .init(model.scheduleData.scheduleDefinition),
             completionPolicy: .init(model.scheduleData.completionPolicy),
             notification: notificationEnabled
         )
@@ -47,12 +47,12 @@ extension StudyDefinition.ComponentSchedule {
 // MARK: - ScheduleDefinition
 
 extension Components.Schemas.ScheduleDefinition {
-    init(_ model: StudyDefinition.ComponentSchedule.ScheduleDefinition) {
+    init(_ model: StudyDefinition.ComponentSchedule.ScheduleDefinition) throws {
         switch model {
         case .once(let schedule):
             self = .once(.init(_type: .once, pattern: .init(schedule)))
         case let .repeated(pattern, offset):
-            self = .repeated(.init(_type: .repeated, pattern: .init(pattern), offset: .init(offset)))
+            self = .repeated(.init(_type: .repeated, pattern: try .init(pattern), offset: .init(offset)))
         }
     }
 }
@@ -106,7 +106,7 @@ extension StudyDefinition.ComponentSchedule.ScheduleDefinition.OneTimeSchedule {
 // MARK: - RepetitionPattern
 
 extension Components.Schemas.RepetitionPattern {
-    init(_ model: StudyDefinition.ComponentSchedule.ScheduleDefinition.RepetitionPattern) {
+    init(_ model: StudyDefinition.ComponentSchedule.ScheduleDefinition.RepetitionPattern) throws {
         switch model {
         case let .daily(interval, hour, minute, second):
             self = .daily(.init(
@@ -120,7 +120,7 @@ extension Components.Schemas.RepetitionPattern {
             self = .weekly(.init(
                 _type: .weekly,
                 interval: interval == 1 ? nil : interval,
-                weekday: weekday.map { .init($0) },
+                weekday: try weekday.map { try .init($0) },
                 hour: hour,
                 minute: minute == 0 ? nil : minute,
                 second: second == 0 ? nil : second
@@ -279,7 +279,7 @@ extension Foundation.DateComponents {
 // MARK: - Weekday
 
 extension Components.Schemas.WeeklyRepetition.WeekdayPayload {
-    init(_ model: Locale.Weekday) {
+    init(_ model: Locale.Weekday) throws {
         switch model {
         case .monday: self = .monday
         case .tuesday: self = .tuesday
@@ -288,7 +288,8 @@ extension Components.Schemas.WeeklyRepetition.WeekdayPayload {
         case .friday: self = .friday
         case .saturday: self = .saturday
         case .sunday: self = .sunday
-        @unknown default: self = .monday
+        @unknown default:
+            throw ServerError.internalServerError("Unknown weekday: \(model)")
         }
     }
 }

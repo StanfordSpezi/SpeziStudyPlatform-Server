@@ -6,13 +6,26 @@ meta {
 
 post {
   url: {{baseUrl}}/participant/enrollments/{{enrollmentId}}/consents
-  body: json
+  body: multipartForm
   auth: inherit
 }
 
-body:json {
-  {
-    "consentType": "study",
-    "accepted": true
+body:multipart-form {
+  consentData: @json {
+    "toggles": {
+      "agree_data_use": true
+    },
+    "selects": {},
+    "signatures": {
+      "primary": {
+        "name": {
+          "givenName": "Jane",
+          "familyName": "Doe"
+        },
+        "signature": "",
+        "size": [0, 0]
+      }
+    }
   }
+  consentPDF: @file(consent.pdf)
 }

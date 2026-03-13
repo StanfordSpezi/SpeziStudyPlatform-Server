@@ -46,10 +46,10 @@ final class PublishedStudyRepository: Module, Sendable {
 
         let rows = try await sql.raw("""
             SELECT published_study.id
-            FROM \(raw: PublishedStudy.schema) published_study
+            FROM \(unsafeRaw: PublishedStudy.schema) published_study
             INNER JOIN (
                 SELECT study_id, MAX(revision) AS max_revision
-                FROM \(raw: PublishedStudy.schema)
+                FROM \(unsafeRaw: PublishedStudy.schema)
                 GROUP BY study_id
             ) latest ON published_study.study_id = latest.study_id
                 AND published_study.revision = latest.max_revision

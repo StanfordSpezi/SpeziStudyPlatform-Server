@@ -1,7 +1,7 @@
 meta {
   name: Update Profile
   type: http
-  seq: 5
+  seq: 3
 }
 
 put {
@@ -12,8 +12,13 @@ put {
 
 body:json {
   {
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "email": "jane@example.com",
+    "gender": "female",
     "dateOfBirth": "1995-06-15",
     "region": "US-CA",
-    "languages": ["en"]
+    "language": "en",
+    "phoneNumber": "+1234567890"
   }
 }

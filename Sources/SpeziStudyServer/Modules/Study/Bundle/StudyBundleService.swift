@@ -14,9 +14,18 @@ import SpeziStudyDefinition
 import ZIPFoundation
 
 
+/// Wraps a string in double quotes if it contains YAML-special characters.
+private func yamlEscape(_ value: String) -> String {
+    let needsQuoting = value.contains(where: { ":{}[]#&*!|>'\"%@`".contains($0) })
+        || value.contains("\n")
+    return needsQuoting ? "\"\(value.replacingOccurrences(of: "\"", with: "\\\""))\"" : value
+}
+
+
 final class StudyBundleService: Module, @unchecked Sendable {
     @Dependency(StudyService.self) var studyService
     @Dependency(StudyRepository.self) var studyRepository
+
     func buildBundle(studyId: UUID, revision: UInt) async throws -> Data {
         try await studyService.checkHasAccess(to: studyId, role: .researcher)
         guard let study = try await studyRepository.findWithComponentsAndSchedules(id: studyId) else {
@@ -85,7 +94,7 @@ final class StudyBundleService: Module, @unchecked Sendable {
         
         let ref = StudyBundle.FileReference(category: .consent, filename: "Consent", fileExtension: "md")
         let files = try consent.map { locale, definition in
-            let markdown = "---\ntitle: \(definition.title)\nversion: \(version)\n---\n\(definition.content)"
+            let markdown = "---\ntitle: \(yamlEscape(definition.title))\nversion: \(version)\n---\n\(definition.content)"
             return try StudyBundle.FileResourceInput(fileRef: ref, localization: locale, contents: markdown)
         }
         return (ref, files)
@@ -138,9 +147,9 @@ final class StudyBundleService: Module, @unchecked Sendable {
         let definition = StudyDefinition.Component.informational(.init(id: id, fileRef: fileRef))
 
         let files = try content.map { locale, item in
-            var markdown = "---\nid: \(id.uuidString)\ntitle: \(item.title)\n"
+            var markdown = "---\nid: \(id.uuidString)\ntitle: \(yamlEscape(item.title))\n"
             if let lede = item.lede {
-                markdown += "lede: \(lede)\n"
+                markdown += "lede: \(yamlEscape(lede))\n"
             }
             markdown += "---\n\(item.content)"
             return try StudyBundle.FileResourceInput(fileRef: fileRef, localization: locale, contents: markdown)

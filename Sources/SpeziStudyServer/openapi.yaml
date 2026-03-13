@@ -794,8 +794,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
     post:
       tags:
@@ -822,8 +821,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
     put:
       tags:
@@ -850,8 +848,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
   /participant/studies:
     get:
@@ -882,8 +879,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
   /participant/enrollments:
     get:
@@ -903,8 +899,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
     post:
       tags:
@@ -933,8 +928,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
   /participant/enrollments/{enrollmentId}/withdraw:
     post:
@@ -958,8 +952,7 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
   /participant/enrollments/{enrollmentId}/consents:
     get:
@@ -983,8 +976,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
     post:
       tags:
@@ -1006,7 +998,7 @@ paths:
                   $ref: '#/components/schemas/UserResponses'
                 consentPDF:
                   type: string
-                  contentEncoding: binary
+                  format: binary
             encoding:
               consentData:
                 contentType: application/json
@@ -1027,8 +1019,7 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
+
 
 components:
   parameters:
@@ -1101,17 +1092,6 @@ components:
             $ref: '#/components/schemas/ProblemDetails'
     Conflict:
       description: Conflict
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ProblemDetails'
-    TooManyRequests:
-      description: Rate limit exceeded
-      headers:
-        Retry-After:
-          description: Number of seconds to wait before retrying
-          schema:
-            type: integer
       content:
         application/json:
           schema:
@@ -2206,10 +2186,10 @@ components:
       type: object
       description: Summary of a published study for participant browsing
       required:
-        - id
+        - studyId
         - metadata
       properties:
-        id:
+        studyId:
           type: string
           format: uuid
           description: The study ID
@@ -2358,6 +2338,7 @@ components:
           $ref: '#/components/schemas/ConsentDataPayload'
         pdfURL:
           type: string
+          format: uri
 
     GenderIdentity:
       type: string

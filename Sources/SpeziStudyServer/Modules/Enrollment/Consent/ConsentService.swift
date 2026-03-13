@@ -6,6 +6,7 @@
 // SPDX-License-Identifier: MIT
 //
 
+import Fluent
 import Foundation
 import Spezi
 
@@ -29,6 +30,10 @@ final class ConsentService: Module, @unchecked Sendable {
             consentURL: consentURL
         )
 
-        return try await repository.createConsentRecord(record)
+        do {
+            return try await repository.createConsentRecord(record)
+        } catch where (error as? any DatabaseError)?.isConstraintFailure == true {
+            throw ServerError.conflict("Consent already submitted for this enrollment revision")
+        }
     }
 }

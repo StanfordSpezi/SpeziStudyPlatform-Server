@@ -24,9 +24,9 @@ enum TestApp {
         case participant(subject: String)
     }
 
-    private static let testSecret = "test-hmac-secret-for-jwt-signing"
-    private static let researcherRole = "spezistudyplatform-researcher"
-    private static let participantRole = "spezistudyplatform-participant"
+    static let testSecret = "test-hmac-secret-for-jwt-signing"
+    static let researcherRole = "spezistudyplatform-researcher"
+    static let participantRole = "spezistudyplatform-participant"
 
     static func withApp(
         token tokenConfig: Token = .researcher(),
@@ -54,7 +54,7 @@ enum TestApp {
         }
     }
 
-    private static func configureTesting(_ app: Application) async throws -> JWTKeyCollection {
+    static func configureTesting(_ app: Application) async throws -> JWTKeyCollection {
         try DatabaseConfiguration.inMemory.configure(for: app)
         configureMigrations(for: app)
         try await app.autoMigrate()
@@ -82,11 +82,12 @@ enum TestApp {
         keys: JWTKeyCollection,
         subject: String = "test-user", // swiftlint:disable:this function_default_parameter_at_end
         roles: [String],
-        groups: [String]
+        groups: [String],
+        expiration: Date = Date().addingTimeInterval(3600)
     ) async throws -> String {
         let payload = KeycloakJWTPayload(
             sub: .init(value: subject),
-            exp: .init(value: Date().addingTimeInterval(3600)),
+            exp: .init(value: expiration),
             roles: roles,
             groups: groups
         )

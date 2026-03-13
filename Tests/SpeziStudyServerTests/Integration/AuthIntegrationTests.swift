@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import JWTKit
 import SpeziHealthKit
 import SpeziLocalization
 @testable import SpeziStudyServer
@@ -55,167 +56,52 @@ private struct Endpoint: Sendable {
 
 @Suite(.serialized)
 struct AuthIntegrationTests {
-    // MARK: - Static Helpers
-
-    private static func researcher(
-        _ method: HTTPMethod,
-        _ path: String,
-        body: Data? = nil,
-        minRole: AuthContext.GroupRole = .researcher, // swiftlint:disable:this function_default_parameter_at_end
-        successStatus: HTTPStatus,
-        requiresGroupAccess: Bool = true
-    ) -> Endpoint {
-        Endpoint(
-            method: method,
-            path: path,
-            body: body,
-            contentType: body != nil ? .json : nil,
-            role: .researcher(minRole: minRole, requiresGroupAccess: requiresGroupAccess),
-            successStatus: successStatus
-        )
-    }
-
-    private static func participant(
-        _ method: HTTPMethod,
-        _ path: String,
-        successStatus: HTTPStatus,
-        body: Data? = nil,
-        contentType: HTTPMediaType? = nil
-    ) -> Endpoint {
-        Endpoint(
-            method: method,
-            path: path,
-            body: body,
-            contentType: contentType ?? (body != nil ? .json : nil),
-            role: .participant,
-            successStatus: successStatus
-        )
-    }
-
-
-    // swiftlint:disable:next function_body_length
-    private static func allEndpoints(
-        groupId: UUID,
-        studyId: UUID,
-        componentId: UUID,
-        scheduleId: UUID
-    ) -> [Endpoint] {
-        let informational = jsonData(Components.Schemas.InformationalComponentInput(
-            name: "X",
-            data: .init([.enUS: InformationalContent(title: "T", lede: nil, content: "C")])
-        ))
-        let questionnaire = jsonData(Components.Schemas.QuestionnaireComponentInput(
-            name: "X",
-            data: .init([.enUS: QuestionnaireContent(questionnaire: "{}")])
-        ))
-        let healthData = jsonData(Components.Schemas.HealthDataComponentInput(
-            name: "X",
-            data: .init(sampleTypes: [.quantity(.heartRate)], historicalDataCollection: .init())
-        ))
-        let scheduleBody = jsonData(scheduleBody())
-        let dummyId = dummyUUID
-        let base = apiBasePath
-
-        return [
-            // Groups
-            researcher(.GET, "\(base)/groups", successStatus: .ok, requiresGroupAccess: false),
-            researcher(.GET, "\(base)/groups/\(groupId)", successStatus: .ok),
-
-            // Studies
-            researcher(.GET, "\(base)/studies/\(studyId)/bundle", successStatus: .ok),
-            researcher(.GET, "\(base)/studies/\(studyId)", successStatus: .ok),
-            researcher(.GET, "\(base)/groups/\(groupId)/studies", successStatus: .ok),
-            researcher(.PATCH, "\(base)/studies/\(studyId)", body: jsonData(patchBody()), successStatus: .ok),
-            researcher(.POST, "\(base)/groups/\(groupId)/studies", body: jsonData(studyBody()), minRole: .admin, successStatus: .created),
-
-            // Invitation Codes
-            researcher(.GET, "\(base)/studies/\(studyId)/invitation-codes", successStatus: .ok),
-            researcher(.POST, "\(base)/studies/\(studyId)/invitation-codes", body: jsonData(["count": 1] as [String: Any]), successStatus: .created),
-            researcher(.DELETE, "\(base)/studies/\(studyId)/invitation-codes/\(dummyId)", successStatus: .notFound),
-
-            // Published Studies & Enrollments
-            researcher(.POST, "\(base)/studies/\(studyId)/publish", minRole: .admin, successStatus: .created),
-            researcher(.GET, "\(base)/studies/\(studyId)/published", successStatus: .ok),
-            researcher(.GET, "\(base)/studies/\(studyId)/enrollments", successStatus: .ok),
-
-            // Studies — destructive
-            researcher(.DELETE, "\(base)/studies/\(studyId)", minRole: .admin, successStatus: .noContent),
-
-            // Components
-            researcher(.GET, "\(base)/studies/\(studyId)/components", successStatus: .ok),
-            researcher(.GET, "\(base)/studies/\(studyId)/components/informational/\(componentId)", successStatus: .ok),
-            researcher(.GET, "\(base)/studies/\(studyId)/components/questionnaire/\(componentId)", successStatus: .ok),
-            researcher(.GET, "\(base)/studies/\(studyId)/components/health-data/\(componentId)", successStatus: .ok),
-            researcher(.POST, "\(base)/studies/\(studyId)/components/informational", body: informational, successStatus: .created),
-            researcher(.POST, "\(base)/studies/\(studyId)/components/questionnaire", body: questionnaire, successStatus: .created),
-            researcher(.POST, "\(base)/studies/\(studyId)/components/health-data", body: healthData, successStatus: .created),
-            researcher(.PUT, "\(base)/studies/\(studyId)/components/informational/\(componentId)", body: informational, successStatus: .ok),
-            researcher(.PUT, "\(base)/studies/\(studyId)/components/questionnaire/\(componentId)", body: questionnaire, successStatus: .ok),
-            researcher(.PUT, "\(base)/studies/\(studyId)/components/health-data/\(componentId)", body: healthData, successStatus: .ok),
-            researcher(.DELETE, "\(base)/studies/\(studyId)/components/\(componentId)", successStatus: .noContent),
-
-            // Component Schedules
-            researcher(.GET, "\(base)/studies/\(studyId)/components/\(componentId)/schedules", successStatus: .ok),
-            researcher(.POST, "\(base)/studies/\(studyId)/components/\(componentId)/schedules", body: scheduleBody, successStatus: .created),
-            researcher(.GET, "\(base)/studies/\(studyId)/components/\(componentId)/schedules/\(scheduleId)", successStatus: .ok),
-            researcher(.PUT, "\(base)/studies/\(studyId)/components/\(componentId)/schedules/\(scheduleId)", body: scheduleBody, successStatus: .ok),
-            researcher(.DELETE, "\(base)/studies/\(studyId)/components/\(componentId)/schedules/\(scheduleId)", successStatus: .noContent),
-
-            // Participant — profile & studies (fixture pre-created by participantAllowedActions)
-            participant(.POST, "\(base)/participant/profile", successStatus: .conflict, body: jsonData(profileBody())),
-            participant(.GET, "\(base)/participant/profile", successStatus: .ok),
-            participant(.PUT, "\(base)/participant/profile", successStatus: .ok, body: jsonData(profileBody(firstName: "Updated"))),
-            participant(.GET, "\(base)/participant/studies", successStatus: .ok),
-            participant(.POST, "\(base)/participant/enrollments", successStatus: .notFound, body: jsonData(["studyId": studyId.uuidString])),
-            participant(.GET, "\(base)/participant/enrollments", successStatus: .ok),
-            participant(.POST, "\(base)/participant/enrollments/\(dummyId)/withdraw", successStatus: .notFound),
-            participant(.GET, "\(base)/participant/enrollments/\(dummyId)/consents", successStatus: .notFound),
-            participant(
-                .POST,
-                "\(base)/participant/enrollments/\(dummyId)/consents",
-                successStatus: .notFound,
-                body: multipartConsentBody(),
-                contentType: .init(type: "multipart", subType: "form-data", parameters: ["boundary": "AuthTestBoundary"])
-            )
-        ]
-    }
-
-    private static func normalizedRoutes(from app: Application) -> Set<String> {
-        let healthRoute = "GET /\(apiBasePath)/health"
-        return Set(
-            app.routes.all.compactMap { route -> String? in
-                let path = route.path
-                    .map { component -> String in
-                        switch component {
-                        case .parameter:
-                            return "*"
-                        case .constant(let value):
-                            return value
-                        default:
-                            return String(describing: component)
-                        }
-                    }
-                    .joined(separator: "/")
-                let normalized = "\(route.method.rawValue) /\(path)"
-                return normalized == healthRoute ? nil : normalized
-            }
-        )
-    }
-
-    private static func normalizedTestedRoutes() -> Set<String> {
-        Set(
-            allEndpoints(groupId: dummyUUID, studyId: dummyUUID, componentId: dummyUUID, scheduleId: dummyUUID)
-                .map { "\($0.method.rawValue) /\($0.path.replacingOccurrences(of: dummyUUID.uuidString, with: "*"))" }
-        )
-    }
-
-    // MARK: - Auth Tests
-
     @Test
     func unauthenticatedReturns401() async throws {
         try await withFixtures(token: .none) { app, token, endpoints in
             for endpoint in endpoints {
                 try await self.expectStatus(.unauthorized, for: endpoint, token: token, on: app)
+            }
+        }
+    }
+
+    @Test
+    func expiredTokenReturns401() async throws {
+        try await TestApp.withApp(token: .none) { app, _ in
+            let keys = JWTKeyCollection()
+            await keys.add(hmac: HMACKey(from: TestApp.testSecret), digestAlgorithm: .sha256)
+
+            let expiredToken = try await TestApp.signToken(
+                keys: keys,
+                roles: [TestApp.researcherRole],
+                groups: ["/Test Group/admin"],
+                expiration: Date().addingTimeInterval(-60)
+            )
+
+            try await app.test(.GET, "\(apiBasePath)/groups", beforeRequest: { req in
+                req.bearerAuth(expiredToken)
+            }) { response in
+                #expect(response.status == .unauthorized)
+            }
+        }
+    }
+
+    @Test
+    func wrongSignatureReturns401() async throws {
+        try await TestApp.withApp(token: .none) { app, _ in
+            let wrongKeys = JWTKeyCollection()
+            await wrongKeys.add(hmac: HMACKey(from: "wrong-secret"), digestAlgorithm: .sha256)
+
+            let badToken = try await TestApp.signToken(
+                keys: wrongKeys,
+                roles: [TestApp.researcherRole],
+                groups: ["/Test Group/admin"]
+            )
+
+            try await app.test(.GET, "\(apiBasePath)/groups", beforeRequest: { req in
+                req.bearerAuth(badToken)
+            }) { response in
+                #expect(response.status == .unauthorized)
             }
         }
     }
@@ -349,6 +235,162 @@ struct AuthIntegrationTests {
         }) { response in
             #expect(response.status == expected, "Expected \(expected.code) for \(endpoint.method.rawValue) \(endpoint.path), got \(response.status.code)")
         }
+    }
+}
+
+
+// MARK: - Static Helpers
+
+extension AuthIntegrationTests {
+    private static func researcher(
+        _ method: HTTPMethod,
+        _ path: String,
+        body: Data? = nil,
+        minRole: AuthContext.GroupRole = .researcher, // swiftlint:disable:this function_default_parameter_at_end
+        successStatus: HTTPStatus,
+        requiresGroupAccess: Bool = true
+    ) -> Endpoint {
+        Endpoint(
+            method: method,
+            path: path,
+            body: body,
+            contentType: body != nil ? .json : nil,
+            role: .researcher(minRole: minRole, requiresGroupAccess: requiresGroupAccess),
+            successStatus: successStatus
+        )
+    }
+
+    private static func participant(
+        _ method: HTTPMethod,
+        _ path: String,
+        successStatus: HTTPStatus,
+        body: Data? = nil,
+        contentType: HTTPMediaType? = nil
+    ) -> Endpoint {
+        Endpoint(
+            method: method,
+            path: path,
+            body: body,
+            contentType: contentType ?? (body != nil ? .json : nil),
+            role: .participant,
+            successStatus: successStatus
+        )
+    }
+
+    // swiftlint:disable:next function_body_length
+    private static func allEndpoints(
+        groupId: UUID,
+        studyId: UUID,
+        componentId: UUID,
+        scheduleId: UUID
+    ) -> [Endpoint] {
+        let informational = jsonData(Components.Schemas.InformationalComponentInput(
+            name: "X",
+            data: .init([.enUS: InformationalContent(title: "T", lede: nil, content: "C")])
+        ))
+        let questionnaire = jsonData(Components.Schemas.QuestionnaireComponentInput(
+            name: "X",
+            data: .init([.enUS: QuestionnaireContent(questionnaire: "{}")])
+        ))
+        let healthData = jsonData(Components.Schemas.HealthDataComponentInput(
+            name: "X",
+            data: .init(sampleTypes: [.quantity(.heartRate)], historicalDataCollection: .init())
+        ))
+        let scheduleBody = jsonData(scheduleBody())
+        let dummyId = dummyUUID
+        let base = apiBasePath
+
+        return [
+            // Groups
+            researcher(.GET, "\(base)/groups", successStatus: .ok, requiresGroupAccess: false),
+            researcher(.GET, "\(base)/groups/\(groupId)", successStatus: .ok),
+
+            // Studies
+            researcher(.GET, "\(base)/studies/\(studyId)/bundle", successStatus: .ok),
+            researcher(.GET, "\(base)/studies/\(studyId)", successStatus: .ok),
+            researcher(.GET, "\(base)/groups/\(groupId)/studies", successStatus: .ok),
+            researcher(.PATCH, "\(base)/studies/\(studyId)", body: jsonData(patchBody()), successStatus: .ok),
+            researcher(.POST, "\(base)/groups/\(groupId)/studies", body: jsonData(studyBody()), minRole: .admin, successStatus: .created),
+
+            // Invitation Codes
+            researcher(.GET, "\(base)/studies/\(studyId)/invitation-codes", successStatus: .ok),
+            researcher(.POST, "\(base)/studies/\(studyId)/invitation-codes", body: jsonData(["count": 1] as [String: Any]), successStatus: .created),
+            researcher(.DELETE, "\(base)/studies/\(studyId)/invitation-codes/\(dummyId)", successStatus: .notFound),
+
+            // Published Studies & Enrollments
+            researcher(.POST, "\(base)/studies/\(studyId)/publish", minRole: .admin, successStatus: .created),
+            researcher(.GET, "\(base)/studies/\(studyId)/published", successStatus: .ok),
+            researcher(.GET, "\(base)/studies/\(studyId)/enrollments", successStatus: .ok),
+
+            // Studies — destructive
+            researcher(.DELETE, "\(base)/studies/\(studyId)", minRole: .admin, successStatus: .noContent),
+
+            // Components
+            researcher(.GET, "\(base)/studies/\(studyId)/components", successStatus: .ok),
+            researcher(.GET, "\(base)/studies/\(studyId)/components/informational/\(componentId)", successStatus: .ok),
+            researcher(.GET, "\(base)/studies/\(studyId)/components/questionnaire/\(componentId)", successStatus: .ok),
+            researcher(.GET, "\(base)/studies/\(studyId)/components/health-data/\(componentId)", successStatus: .ok),
+            researcher(.POST, "\(base)/studies/\(studyId)/components/informational", body: informational, successStatus: .created),
+            researcher(.POST, "\(base)/studies/\(studyId)/components/questionnaire", body: questionnaire, successStatus: .created),
+            researcher(.POST, "\(base)/studies/\(studyId)/components/health-data", body: healthData, successStatus: .created),
+            researcher(.PUT, "\(base)/studies/\(studyId)/components/informational/\(componentId)", body: informational, successStatus: .ok),
+            researcher(.PUT, "\(base)/studies/\(studyId)/components/questionnaire/\(componentId)", body: questionnaire, successStatus: .ok),
+            researcher(.PUT, "\(base)/studies/\(studyId)/components/health-data/\(componentId)", body: healthData, successStatus: .ok),
+            researcher(.DELETE, "\(base)/studies/\(studyId)/components/\(componentId)", successStatus: .noContent),
+
+            // Component Schedules
+            researcher(.GET, "\(base)/studies/\(studyId)/components/\(componentId)/schedules", successStatus: .ok),
+            researcher(.POST, "\(base)/studies/\(studyId)/components/\(componentId)/schedules", body: scheduleBody, successStatus: .created),
+            researcher(.GET, "\(base)/studies/\(studyId)/components/\(componentId)/schedules/\(scheduleId)", successStatus: .ok),
+            researcher(.PUT, "\(base)/studies/\(studyId)/components/\(componentId)/schedules/\(scheduleId)", body: scheduleBody, successStatus: .ok),
+            researcher(.DELETE, "\(base)/studies/\(studyId)/components/\(componentId)/schedules/\(scheduleId)", successStatus: .noContent),
+
+            // Participant — profile & studies (fixture pre-created by participantAllowedActions)
+            participant(.POST, "\(base)/participant/profile", successStatus: .conflict, body: jsonData(profileBody())),
+            participant(.GET, "\(base)/participant/profile", successStatus: .ok),
+            participant(.PUT, "\(base)/participant/profile", successStatus: .ok, body: jsonData(profileBody(firstName: "Updated"))),
+            participant(.GET, "\(base)/participant/studies", successStatus: .ok),
+            participant(.POST, "\(base)/participant/enrollments", successStatus: .notFound, body: jsonData(["studyId": studyId.uuidString])),
+            participant(.GET, "\(base)/participant/enrollments", successStatus: .ok),
+            participant(.POST, "\(base)/participant/enrollments/\(dummyId)/withdraw", successStatus: .notFound),
+            participant(.GET, "\(base)/participant/enrollments/\(dummyId)/consents", successStatus: .notFound),
+            participant(
+                .POST,
+                "\(base)/participant/enrollments/\(dummyId)/consents",
+                successStatus: .notFound,
+                body: multipartConsentBody(),
+                contentType: .init(type: "multipart", subType: "form-data", parameters: ["boundary": "AuthTestBoundary"])
+            )
+        ]
+    }
+
+    private static func normalizedRoutes(from app: Application) -> Set<String> {
+        let healthRoute = "GET /\(apiBasePath)/health"
+        return Set(
+            app.routes.all.compactMap { route -> String? in
+                let path = route.path
+                    .map { component -> String in
+                        switch component {
+                        case .parameter:
+                            return "*"
+                        case .constant(let value):
+                            return value
+                        default:
+                            return String(describing: component)
+                        }
+                    }
+                    .joined(separator: "/")
+                let normalized = "\(route.method.rawValue) /\(path)"
+                return normalized == healthRoute ? nil : normalized
+            }
+        )
+    }
+
+    private static func normalizedTestedRoutes() -> Set<String> {
+        Set(
+            allEndpoints(groupId: dummyUUID, studyId: dummyUUID, componentId: dummyUUID, scheduleId: dummyUUID)
+                .map { "\($0.method.rawValue) /\($0.path.replacingOccurrences(of: dummyUUID.uuidString, with: "*"))" }
+        )
     }
 }
 

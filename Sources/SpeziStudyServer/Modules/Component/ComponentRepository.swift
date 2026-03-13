@@ -44,6 +44,7 @@ final class ComponentRepository: Module, Sendable {
     }
 
     func update(_ component: Component) async throws -> Component {
+        component.type = component.data.type
         if case .healthDataCollection(var healthData) = component.data {
             healthData.id = try component.requireId()
             component.data = .healthDataCollection(healthData)

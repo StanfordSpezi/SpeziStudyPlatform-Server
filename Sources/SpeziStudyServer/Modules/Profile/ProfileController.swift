@@ -38,11 +38,4 @@ extension Controller {
         let participant = try await profileService.updateProfile(input: profileInput)
         return .ok(.init(body: .json(try .init(participant))))
     }
-
-    func getParticipantStudies(
-        _ input: Operations.GetParticipantStudies.Input
-    ) async throws -> Operations.GetParticipantStudies.Output {
-        let studies = try await publishedStudyService.browseStudies(code: input.query.code)
-        return .ok(.init(body: .json(try studies.map { try .init($0) })))
-    }
 }

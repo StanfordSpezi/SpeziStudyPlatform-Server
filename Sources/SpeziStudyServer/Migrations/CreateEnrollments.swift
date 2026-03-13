@@ -30,11 +30,6 @@ struct CreateEnrollments: AsyncMigration {
                 .on("enrollments")
                 .column("study_id")
                 .run()
-
-            try await sql.create(index: "idx_enrollments_participant_id")
-                .on("enrollments")
-                .column("participant_id")
-                .run()
         }
     }
 

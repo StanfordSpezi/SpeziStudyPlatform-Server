@@ -6,9 +6,9 @@
 // SPDX-License-Identifier: MIT
 //
 
+import Fluent
 import Foundation
 import Spezi
-import Fluent
 
 
 final class ProfileService: Module, @unchecked Sendable {
@@ -16,11 +16,6 @@ final class ProfileService: Module, @unchecked Sendable {
 
     func createProfile(input: ParticipantProfileInput) async throws -> Participant {
         let context = try AuthContext.checkIsParticipant()
-
-        let existing = try await repository.findByIdentityProviderId(context.subject)
-        if existing != nil {
-            throw ServerError.conflict(resource: "Participant", identifier: context.subject)
-        }
 
         let participant = Participant(
             identityProviderId: context.subject,
