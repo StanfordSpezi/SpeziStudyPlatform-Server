@@ -16,7 +16,6 @@ enum ParticipantFixtures {
         [
             "firstName": firstName,
             "lastName": "Doe",
-            "email": "jane@example.com",
             "gender": "female",
             "dateOfBirth": "2000-01-15",
             "region": "US",

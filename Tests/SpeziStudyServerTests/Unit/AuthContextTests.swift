@@ -16,7 +16,14 @@ struct AuthContextTests {
     private static let participantRole = "spezistudyplatform-participant"
 
     private func makeContext(roles: [String] = [researcherRole], groups: [String] = []) -> AuthContext {
-        AuthContext(subject: "test", roles: roles, groups: groups, researcherRole: Self.researcherRole, participantRole: Self.participantRole)
+        AuthContext(
+            subject: "test",
+            email: "test@example.com",
+            roles: roles,
+            groups: groups,
+            researcherRole: Self.researcherRole,
+            participantRole: Self.participantRole
+        )
     }
 
     // MARK: - GroupRole Hierarchy

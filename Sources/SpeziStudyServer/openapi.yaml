@@ -2397,7 +2397,6 @@ components:
       required:
         - firstName
         - lastName
-        - email
         - gender
         - dateOfBirth
         - region
@@ -2410,9 +2409,6 @@ components:
         lastName:
           type: string
           maxLength: 200
-        email:
-          type: string
-          format: email
         gender:
           $ref: '#/components/schemas/GenderIdentity'
         dateOfBirth:

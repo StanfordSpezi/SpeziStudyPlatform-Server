@@ -20,7 +20,7 @@ struct ParticipantIntegrationTests {
 
     @Test
     func createProfileReturnsCreated() async throws {
-        try await TestApp.withApp(token: .participant(subject: "profile-create-user")) { app, token in
+        try await TestApp.withApp(token: .participant(subject: "profile-create-user", email: "jane@example.com")) { app, token in
             try await app.test(.POST, "\(apiBasePath)/participant/profile", beforeRequest: { req in
                 req.bearerAuth(token)
                 try req.encodeJSONBody(Self.profileBody)

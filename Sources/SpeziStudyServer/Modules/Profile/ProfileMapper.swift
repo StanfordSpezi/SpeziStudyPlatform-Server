@@ -21,7 +21,6 @@ private let dateOnlyFormatter: DateFormatter = {
 struct ParticipantProfileInput: Sendable {
     var firstName: String
     var lastName: String
-    var email: String
     var gender: GenderIdentity
     var dateOfBirth: Date
     var region: String
@@ -31,7 +30,6 @@ struct ParticipantProfileInput: Sendable {
     init(_ schema: Components.Schemas.ParticipantProfileInput) throws {
         self.firstName = schema.firstName
         self.lastName = schema.lastName
-        self.email = schema.email
         guard let gender = GenderIdentity(rawValue: schema.gender.rawValue) else {
             throw ServerError.badRequest("Invalid gender value")
         }

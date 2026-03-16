@@ -29,6 +29,7 @@ struct AuthContext: Sendable {
     @TaskLocal static var current: AuthContext?
 
     let subject: String
+    let email: String
     let roles: [String]
     let researcherRole: String
     let participantRole: String
@@ -36,8 +37,9 @@ struct AuthContext: Sendable {
     /// Parsed JWT group paths (e.g., "/Stanford Biodesign Digital Health/admin") as a membership map.
     let groupMemberships: [String: GroupRole]
 
-    init(subject: String, roles: [String], groups: [String], researcherRole: String, participantRole: String) {
+    init(subject: String, email: String, roles: [String], groups: [String], researcherRole: String, participantRole: String) {
         self.subject = subject
+        self.email = email
         self.roles = roles
         self.researcherRole = researcherRole
         self.participantRole = participantRole

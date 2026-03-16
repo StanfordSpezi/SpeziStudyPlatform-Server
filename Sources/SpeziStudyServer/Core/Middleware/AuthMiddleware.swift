@@ -47,6 +47,7 @@ struct AuthMiddleware: ServerMiddleware {
 
         let authContext = AuthContext(
             subject: payload.sub.value,
+            email: payload.email,
             roles: payload.roles,
             groups: payload.groups ?? [],
             researcherRole: researcherRole,

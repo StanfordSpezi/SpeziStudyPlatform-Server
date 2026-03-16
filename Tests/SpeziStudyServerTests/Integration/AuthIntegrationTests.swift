@@ -225,7 +225,7 @@ struct AuthIntegrationTests {
             let schedule = try await ComponentFixtures.createSchedule(on: app.db, componentId: questionnaireId)
             let scheduleId = try schedule.requireId()
 
-            if case .participant(let subject) = tokenConfig {
+            if case .participant(let subject, _) = tokenConfig {
                 try await ParticipantFixtures.createParticipant(on: app.db, identityProviderId: subject)
             }
 

@@ -21,7 +21,7 @@ final class ProfileService: Module, @unchecked Sendable {
             identityProviderId: context.subject,
             firstName: input.firstName,
             lastName: input.lastName,
-            email: input.email,
+            email: context.email,
             gender: input.gender,
             dateOfBirth: input.dateOfBirth,
             region: input.region,
@@ -55,7 +55,7 @@ final class ProfileService: Module, @unchecked Sendable {
 
         participant.firstName = input.firstName
         participant.lastName = input.lastName
-        participant.email = input.email
+        participant.email = context.email
         participant.gender = input.gender
         participant.dateOfBirth = input.dateOfBirth
         participant.region = input.region

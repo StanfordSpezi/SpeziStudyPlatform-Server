@@ -21,7 +21,7 @@ enum TestApp {
         /// Researcher token with the given Keycloak group paths.
         case researcher(groups: [String] = ["/Test Group/admin"])
         /// Participant token with the given subject (identity provider ID).
-        case participant(subject: String)
+        case participant(subject: String, email: String = "test@example.com")
     }
 
     static let testSecret = "test-hmac-secret-for-jwt-signing"
@@ -41,8 +41,8 @@ enum TestApp {
                 nil
             case .researcher(let groups):
                 try await signToken(keys: keys, subject: "researcher-test-user", roles: [researcherRole], groups: groups)
-            case .participant(let subject):
-                try await signToken(keys: keys, subject: subject, roles: [participantRole], groups: [])
+            case let .participant(subject, email):
+                try await signToken(keys: keys, subject: subject, email: email, roles: [participantRole], groups: [])
             }
             try await test(app, token)
             try await cleanup(on: app.db)
@@ -80,7 +80,8 @@ enum TestApp {
 
     static func signToken(
         keys: JWTKeyCollection,
-        subject: String = "test-user", // swiftlint:disable:this function_default_parameter_at_end
+        subject: String = "test-user",
+        email: String = "test@example.com", // swiftlint:disable:this function_default_parameter_at_end
         roles: [String],
         groups: [String],
         expiration: Date = Date().addingTimeInterval(3600)
@@ -88,6 +89,7 @@ enum TestApp {
         let payload = KeycloakJWTPayload(
             sub: .init(value: subject),
             exp: .init(value: expiration),
+            email: email,
             roles: roles,
             groups: groups
         )
