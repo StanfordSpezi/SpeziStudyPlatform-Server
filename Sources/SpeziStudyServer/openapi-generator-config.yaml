@@ -27,6 +27,5 @@ typeOverrides:
     LocalizationKey: SpeziLocalization.LocalizationKey
     StudyConsent: "SpeziLocalization.LocalizationsDictionary<SpeziStudyServer.ConsentContent>"
     StudyMetadataCodable: SpeziStudyDefinition.StudyDefinition.Metadata
-    StudyMetadataParticipationCriterion: SpeziStudyDefinition.StudyDefinition.ParticipationCriterion
     StudyVisibility: SpeziStudyServer.StudyVisibility
     EnrollmentConditions: SpeziStudyServer.EnrollmentConditions
