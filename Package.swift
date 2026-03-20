@@ -38,7 +38,7 @@ let package = Package(
         .package(url: "https://github.com/StanfordSpezi/SpeziFoundation.git", from: "2.7.3"),
         .package(url: "https://github.com/StanfordSpezi/SpeziHealthKit.git", from: "1.4.0"),
         // TODO:
-        .package(url: "https://github.com/StanfordSpezi/SpeziStudy.git", revision: "c8c2bae65215c0bc1ba61dc22a4d64899ec015f7") 
+        .package(url: "https://github.com/StanfordSpezi/SpeziStudy.git", revision: "c8c2bae65215c0bc1ba61dc22a4d64899ec015f7")
     ] + swiftLintPackage(),
     targets: [
         .executableTarget(
