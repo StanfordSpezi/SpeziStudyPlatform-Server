@@ -14,7 +14,7 @@ import PackageDescription
 let package = Package(
     name: "SpeziStudyPlatformServer",
     platforms: [
-        .macOS(.v15)
+        .macOS(.v26)
     ],
     dependencies: [
         // 💧 A server-side Swift web framework.
