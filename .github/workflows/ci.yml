@@ -26,14 +26,16 @@ concurrency:
 jobs:
   ci:
     name: CI
+    if: github.event_name != 'workflow_dispatch'
     uses: StanfordBDHG/.github/.github/workflows/swift-package-ci.yml@v2
     with:
       linux_run_tests: true
     secrets: inherit
 
-  dockerimage:
+  publish:
     name: Docker Build and Push
-    if: github.event_name != 'pull_request'
+    needs: ci
+    if: github.event_name != 'pull_request' && (needs.ci.result == 'success' || needs.ci.result == 'skipped')
     uses: StanfordBDHG/.github/.github/workflows/docker-build-and-push.yml@v2
     with:
       imageName: stanfordspezi/spezistudyplatform-server
