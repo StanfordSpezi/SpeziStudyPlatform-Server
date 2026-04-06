@@ -29,6 +29,17 @@ public func configure(_ app: Application) async throws {
         return
     }
 
+    if try Environment.require("APP_ENVIRONMENT") == "development" {
+        app.middleware.use(
+            CORSMiddleware(configuration: .init(
+                allowedOrigin: .any(["http://localhost:3000"]),
+                allowedMethods: [.GET, .POST, .PUT, .PATCH, .DELETE, .OPTIONS],
+                allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith]
+            )),
+            at: .beginning
+        )
+    }
+
     let keycloakConfig = try KeycloakConfiguration()
     let keycloak = KeycloakClient(client: app.client, config: keycloakConfig)
     await configureServices(for: app)

@@ -29,9 +29,9 @@ public enum DatabaseConfiguration: Sendable {
                 username: try Environment.require("DATABASE_USERNAME"),
                 password: try Environment.require("DATABASE_PASSWORD"),
                 database: try Environment.require("DATABASE_NAME"),
-                tls: app.environment.isRelease
-                    ? .require(try .init(configuration: .clientDefault))
-                    : .disable
+                tls: try Environment.require("APP_ENVIRONMENT") == "development"
+                    ? .disable
+                    : .require(try .init(configuration: .clientDefault))
             )
             app.databases.use(.postgres(configuration: sqlConfig), as: .psql)
         }
