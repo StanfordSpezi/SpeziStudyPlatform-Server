@@ -35,7 +35,7 @@ jobs:
   publish:
     name: Docker Build and Push
     needs: ci
-    if: github.event_name != 'pull_request' && (needs.ci.result == 'success' || needs.ci.result == 'skipped')
+    if: always() && github.event_name == 'pull_request' && (needs.ci.result == 'success' || needs.ci.result == 'skipped')
     uses: StanfordBDHG/.github/.github/workflows/docker-build-and-push.yml@v2
     with:
       imageName: stanfordspezi/spezistudyplatform-server
