@@ -35,10 +35,10 @@ let package = Package(
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "5.0.0"),
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", from: "0.9.0"),
         .package(url: "https://github.com/StanfordSpezi/Spezi.git", from: "1.10.1"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziVapor.git", .upToNextMajor(from: "0.1.0")),
+        .package(url: "https://github.com/StanfordSpezi/SpeziVapor.git", .upToNextMajor(from: "0.1.1")),
         .package(url: "https://github.com/StanfordSpezi/SpeziFoundation.git", from: "2.7.3"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziHealthKit.git", from: "1.4.0"),
-        .package(url: "https://github.com/StanfordSpezi/SpeziStudy.git", from: "0.2.0")
+        .package(url: "https://github.com/StanfordSpezi/SpeziHealthKit.git", from: "1.4.2"),
+        .package(url: "https://github.com/StanfordSpezi/SpeziStudy.git", from: "0.2.2")
     ] + swiftLintPackage(),
     targets: [
         .executableTarget(
