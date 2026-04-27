@@ -15,7 +15,6 @@ SPDX-License-Identifier: MIT
 
 A Vapor-based server for managing clinical research studies, built as part of the Spezi ecosystem.
 
-
 ## Overview
 
 Spezi Study Server provides a REST API for managing clinical research studies, including:
@@ -26,29 +25,14 @@ Spezi Study Server provides a REST API for managing clinical research studies, i
 
 The server integrates with [SpeziStudy](https://github.com/StanfordSpezi/SpeziStudy) for study configuration types and [SpeziVapor](https://github.com/StanfordSpezi/SpeziVapor) for dependency injection.
 
-
 ## Requirements
 
 - Swift 6.0+
 - Docker
 
-
 ## Local Development Setup
 
-The project uses PostgreSQL and [Keycloak](https://www.keycloak.org) for authentication, both running via Docker Compose.
-
-```bash
-cp .env.example .env                          # configure environment (defaults work out of the box)
-docker compose up -d db keycloak-db keycloak  # start PostgreSQL and Keycloak
-swift run SpeziStudyPlatformServer migrate --yes      # create / update database tables
-swift run                                     # start the server
-```
-
-The server connects to PostgreSQL, fetches JWKS from Keycloak, and syncs groups on startup.
-
-To revert migrations, run `swift run SpeziStudyPlatformServer migrate --revert`. When using Docker Compose for the app itself, use `docker compose run migrate` and `docker compose run revert` instead.
-
-See `.env.example` for all available environment options.
+The server requires PostgreSQL and Keycloak. See [SpeziStudyPlatform-Infrastructure](https://github.com/StanfordSpezi/SpeziStudyPlatform-Infrastructure) for setting up these services. Run `swift run SpeziStudyPlatformServer migrate --yes` before the first startup to run the database migrations.
 
 ### Run Tests
 
@@ -60,26 +44,23 @@ Tests must run without parallelism (`--no-parallel`) because integration test su
 
 ### Docker Compose Services
 
-| Service | Description | Port |
-|---|---|---|
-| `db` | PostgreSQL for the application | `5432` |
-| `keycloak-db` | PostgreSQL for Keycloak | internal |
-| `keycloak` | Keycloak identity provider | `8180` |
-| `app` | Production server (requires `docker compose build` first) | `8080` |
-| `migrate` | Run migrations manually (`docker compose run migrate`) | — |
-| `revert` | Revert migrations (`docker compose run revert`) | — |
+| Service   | Description                                               |
+| --------- | --------------------------------------------------------- |
+| `app`     | Production server (requires `docker compose build` first) |
+| `migrate` | Run migrations manually (`docker compose run migrate`)    |
+| `revert`  | Revert migrations (`docker compose run revert`)           |
 
+Infrastructure services (PostgreSQL, Keycloak) are defined in [SpeziStudyPlatform-Infrastructure](https://github.com/StanfordSpezi/SpeziStudyPlatform-Infrastructure).
+
+### Bruno
+
+API request collections are available in `tools/bruno/`. [Bruno](https://www.usebruno.com) is an open-source API client. Select the **SpeziStudy** environment in Bruno to load the required variables.
+
+Run the **Seed** request to bootstrap a working dataset, it logs in via Keycloak, fetches groups, creates a study, and adds sample components in sequence. Requests use post-response scripts to pass IDs (e.g. `groupId`, `studyId`) to subsequent requests automatically.
 
 ## API Documentation
 
 The API is defined using OpenAPI. The specification and generated types live in the shared [SpeziStudyPlatform-API](https://github.com/StanfordSpezi/SpeziStudyPlatform-API) package.
-
-### API Testing with Bruno
-
-API requests for manual testing are available in `tools/bruno/`. [Bruno](https://www.usebruno.com) is an open-source API client. Select the **SpeziStudy** environment in Bruno to load the required variables.
-
-Run the **Seed** request to bootstrap a working dataset — it logs in via Keycloak, fetches groups, creates a study, and adds sample components in sequence. Requests use post-response scripts to pass IDs (e.g. `groupId`, `studyId`) to subsequent requests automatically, so you can explore the API without manually copying values.
-
 
 ## Architecture
 
@@ -99,7 +80,6 @@ Each module contains its own Controller, Service, Repository, and Mapper.
 ## License
 
 This project is licensed under the MIT License. See [Licenses](https://github.com/StanfordSpezi/SpeziStudyPlatform-Server/tree/main/LICENSES) for more information.
-
 
 ## Contributors
 
